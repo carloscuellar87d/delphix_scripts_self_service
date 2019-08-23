@@ -1,3 +1,44 @@
+#================================================================================
+# File:         api_op_container.py
+# Type:         python script
+# Date:         23-August 2019
+# Author:       Carlos Cuellar - 23/August/2019
+# Ownership:    This script is owned and maintained by the user, not by Delphix
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Copyright (c) 2019 by Delphix. All rights reserved.
+#
+# Description:
+#
+#       Script to be used to pull storage details from objects from all Delphix Engine configured in DXToolkit
+#
+# Prerequisites:
+#   Python 2/3 installed
+#
+#
+# Usage
+#   python api_create_branches.py <DELPHIX_ADMIN> <PASSWORD> <DELPHIX_ENGINE> <TEMPLATE_NAME> <CONTAINER_NAME> <CONTAINER_OPERATION> <BOOKMARK_NAME(for restore only)>
+#
+#
+# Example
+#
+#   python api_op_container.py admin delphix delphixengine test1 testc1 RESTORE newbmk
+#   python api_op_container.py admin delphix delphixengine test1 testc1 REFRESH
+#   python api_op_container.py admin delphix delphixengine test1 testc1 RESET
+#
+#================================================================================
+#
 import sys
 import requests
 import json
@@ -10,7 +51,7 @@ DX_ENGINE=sys.argv[3]
 DX_TEMPLATE=sys.argv[4]
 DX_CONTAINER=sys.argv[5]
 DX_ACTION=sys.argv[6]
-DX_BOOKMARK=sys.argv[7]
+
 BASEURL='http://' + DX_ENGINE + '/resources/json/delphix'
 
 print (BASEURL)
@@ -129,6 +170,7 @@ elif DX_ACTION == "RESET":
     #
     resetcontainer = session.post(BASEURL+'/selfservice/container/' + DX_CONTAINER_REF + '/reset', data=formdata, headers=req_headers, allow_redirects=False)
 elif DX_ACTION == "RESTORE":
+    DX_BOOKMARK=sys.argv[7]
     #
     #Get Delphix Self Service Bookmark details
     #
