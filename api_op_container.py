@@ -157,7 +157,7 @@ if DX_ACTION == "REFRESH":
     #
     # Execute API call to create Delphix Self Service Bookmark
     #
-    resetcontainer = session.post(BASEURL+'/selfservice/container/' + DX_CONTAINER_REF + '/refresh', data=formdata, headers=req_headers, allow_redirects=False)
+    refreshcontainer = session.post(BASEURL+'/selfservice/container/' + DX_CONTAINER_REF + '/refresh', data=formdata, headers=req_headers, allow_redirects=False)
 elif DX_ACTION == "RESET":
     #
     # Create JSON format parameters for API call to create Delphix Self Service Bookmark
