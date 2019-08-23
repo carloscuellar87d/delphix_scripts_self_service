@@ -10,6 +10,7 @@ DX_ENGINE=sys.argv[3]
 DX_TEMPLATE=sys.argv[4]
 DX_CONTAINER=sys.argv[5]
 DX_ACTION=sys.argv[6]
+DX_BOOKMARK=sys.argv[7]
 BASEURL='http://' + DX_ENGINE + '/resources/json/delphix'
 
 print (BASEURL)
@@ -127,6 +128,29 @@ elif DX_ACTION == "RESET":
     # Execute API call to create Delphix Self Service Bookmark
     #
     resetcontainer = session.post(BASEURL+'/selfservice/container/' + DX_CONTAINER_REF + '/reset', data=formdata, headers=req_headers, allow_redirects=False)
+elif DX_ACTION == "RESTORE":
+    #
+    #Get Delphix Self Service Bookmark details
+    #
+    bookmark = session.get(BASEURL+'/selfservice/bookmark', headers=req_headers, allow_redirects=False)
+
+    #
+    # JSON Parsing ...
+    #
+    bookmarkf = json.loads(bookmark.text)
+    #
+    #Get Delphix Self Service Bookmark reference
+    #
+    for dbobj in bookmarkf['result']:
+        if dbobj['name'] == DX_BOOKMARK:
+            DX_BOOKMARK_REF = dbobj['reference']
+            print ( DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
+    print ('Restore container  ' +  DX_CONTAINER + ' from template ' + DX_TEMPLATE + ' to Bookmark ' + DX_BOOKMARK + ' ...')
+    formdata = '{ "type": "JSDataContainerRestoreParameters" , "timelinePointParameters": { "type": "JSTimelinePointBookmarkInput", "bookmark": "' + DX_BOOKMARK_REF + '" }, "forceOption": false }'
+    #
+    # Execute API call to create Delphix Self Service Bookmark
+    #
+    restorecontainer = session.post(BASEURL+'/selfservice/container/' + DX_CONTAINER_REF + '/restore', data=formdata, headers=req_headers, allow_redirects=False)
 else:
     print ("Please specify REFRESH or RESET only")
 
