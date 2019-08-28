@@ -141,14 +141,17 @@ for dbobj in branchf['result']:
 # Create or Delete Bookmark accordingly ...
 #
 if DX_CREATE_DELETE == "CREATE":
-    #
-    # Create JSON format parameters for API call to create Delphix Self Service Bookmark
-    #
     print ('Creating bookmark ' +  DX_BOOKMARK + ' on branch ' + DX_BRANCH + ' on container  ' +  DX_CONTAINER + ' from template ' + DX_TEMPLATE + '...')
-    formdata = '{ "type": "JSBookmarkCreateParameters" , "bookmark": { "type": "JSBookmark", "name": "' + DX_BOOKMARK + '" ,  "branch": "' + DX_BRANCH_REF + '", "expiration": "' + DX_BM_EXPIRATION + '" }, "timelinePointParameters": { "type": "JSTimelinePointTimeInput", "time": "' + DX_BM_TIME + '", "branch": "' + DX_BRANCH_REF + '" } }'
-    #
-    # Execute API call to create Delphix Self Service Bookmark
-    #
+    if DX_BM_TIME == "CURRENT_TIME":
+        formdata = '{ "type": "JSBookmarkCreateParameters" , "bookmark": { "type": "JSBookmark", "name": "' + DX_BOOKMARK + '" ,  "branch": "' + DX_BRANCH_REF + '", "expiration": "' + DX_BM_EXPIRATION + '" }, "timelinePointParameters": { "type": "JSTimelinePointLatestTimeInput", "sourceDataLayout": "' + DX_CONTAINER_REF + '" } }'
+    else:
+        #
+        # Create JSON format parameters for API call to create Delphix Self Service Bookmark
+        #
+        formdata = '{ "type": "JSBookmarkCreateParameters" , "bookmark": { "type": "JSBookmark", "name": "' + DX_BOOKMARK + '" ,  "branch": "' + DX_BRANCH_REF + '", "expiration": "' + DX_BM_EXPIRATION + '" }, "timelinePointParameters": { "type": "JSTimelinePointTimeInput", "time": "' + DX_BM_TIME + '", "branch": "' + DX_BRANCH_REF + '" } }'
+        #
+        # Execute API call to create Delphix Self Service Bookmark
+        #
     createbookmark = session.post(BASEURL+'/selfservice/bookmark', data=formdata, headers=req_headers, allow_redirects=False)
 elif DX_CREATE_DELETE == "DELETE":
     #
