@@ -38,6 +38,7 @@
 import sys
 import requests
 import json
+import time
 
 
 #DATE FORMAT IS "[yyyy]-[MM]-[dd]T[HH]:[mm]:[ss].[SSS]Z"
@@ -115,7 +116,9 @@ for dbobj in containerf['result']:
     if dbobj['name'] == DX_CONTAINER:
         if dbobj['template'] == DX_TEMPLATE_REF:
             DX_CONTAINER_REF = dbobj['reference']
+            DX_ACT_BRANCH_REF = dbobj['activeBranch']
             print ( DX_CONTAINER + ':' + DX_CONTAINER_REF)
+            print ( 'Active Branch: ' + DX_ACT_BRANCH_REF)
 
 
 #
@@ -142,17 +145,50 @@ for dbobj in branchf['result']:
 #
 if DX_CREATE_DELETE == "CREATE":
     print ('Creating bookmark ' +  DX_BOOKMARK + ' on branch ' + DX_BRANCH + ' on container  ' +  DX_CONTAINER + ' from template ' + DX_TEMPLATE + '...')
-    if DX_BM_TIME == "CURRENT_TIME":
-        formdata = '{ "type": "JSBookmarkCreateParameters" , "bookmark": { "type": "JSBookmark", "name": "' + DX_BOOKMARK + '" ,  "branch": "' + DX_BRANCH_REF + '", "expiration": "' + DX_BM_EXPIRATION + '" }, "timelinePointParameters": { "type": "JSTimelinePointLatestTimeInput", "sourceDataLayout": "' + DX_CONTAINER_REF + '" } }'
+    if DX_ACT_BRANCH_REF == DX_BRANCH_REF:
+        if DX_BM_TIME == "CURRENT_TIME":
+            formdata = '{ "type": "JSBookmarkCreateParameters" , "bookmark": { "type": "JSBookmark", "name": "' + DX_BOOKMARK + '" ,  "branch": "' + DX_BRANCH_REF + '", "expiration": "' + DX_BM_EXPIRATION + '" }, "timelinePointParameters": { "type": "JSTimelinePointLatestTimeInput", "sourceDataLayout": "' + DX_CONTAINER_REF + '" } }'
+        else:
+            #
+            # Create JSON format parameters for API call to create Delphix Self Service Bookmark
+            #
+            formdata = '{ "type": "JSBookmarkCreateParameters" , "bookmark": { "type": "JSBookmark", "name": "' + DX_BOOKMARK + '" ,  "branch": "' + DX_BRANCH_REF + '", "expiration": "' + DX_BM_EXPIRATION + '" }, "timelinePointParameters": { "type": "JSTimelinePointTimeInput", "time": "' + DX_BM_TIME + '", "branch": "' + DX_BRANCH_REF + '" } }'
+            #
+            # Execute API call to create Delphix Self Service Bookmark
+            #
+        createbookmark = session.post(BASEURL+'/selfservice/bookmark', data=formdata, headers=req_headers, allow_redirects=False)
+        print ( 'Checking if bookmark was created ... ' )
+        time.sleep(15)
+        #
+        #Get Delphix Self Service Bookmark details
+        #
+        bookmark = session.get(BASEURL+'/selfservice/bookmark', headers=req_headers, allow_redirects=False)
+
+        #
+        # JSON Parsing ...
+        #
+        bookmarkf = json.loads(bookmark.text)
+
+        #
+        #Get Delphix Self Service Bookmark reference
+        #
+        bm_created = 0
+        for dbobj in bookmarkf['result']:
+            if dbobj['template'] == DX_TEMPLATE_REF:
+                if dbobj['container'] == DX_CONTAINER_REF:
+                    if dbobj['branch'] == DX_BRANCH_REF:
+                        if dbobj['name'] == DX_BOOKMARK:
+                            DX_BOOKMARK_REF = dbobj['reference']
+                            print ( 'Bookmark created successfully --> ' + DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
+                            bm_created = 1
+        #
+        #Check and validate if bookmark was created successfully
+        #
+        if bm_created != 1:
+            print ( 'Bookmark was not created successfully. Please review your parameters.' )
+
     else:
-        #
-        # Create JSON format parameters for API call to create Delphix Self Service Bookmark
-        #
-        formdata = '{ "type": "JSBookmarkCreateParameters" , "bookmark": { "type": "JSBookmark", "name": "' + DX_BOOKMARK + '" ,  "branch": "' + DX_BRANCH_REF + '", "expiration": "' + DX_BM_EXPIRATION + '" }, "timelinePointParameters": { "type": "JSTimelinePointTimeInput", "time": "' + DX_BM_TIME + '", "branch": "' + DX_BRANCH_REF + '" } }'
-        #
-        # Execute API call to create Delphix Self Service Bookmark
-        #
-    createbookmark = session.post(BASEURL+'/selfservice/bookmark', data=formdata, headers=req_headers, allow_redirects=False)
+        print ('Please specify the current active branch of container ' + DX_CONTAINER + ' from template ' + DX_TEMPLATE + '...')
 elif DX_CREATE_DELETE == "DELETE":
     #
     #Get Delphix Self Service Bookmark details
@@ -167,15 +203,22 @@ elif DX_CREATE_DELETE == "DELETE":
     #
     #Get Delphix Self Service Bookmark reference
     #
+    DX_BOOKMARK_REF = None
     for dbobj in bookmarkf['result']:
-        if dbobj['name'] == DX_BOOKMARK:
-            DX_BOOKMARK_REF = dbobj['reference']
-            print ( DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
-    #
-    # Execute API call to delete Delphix Self Service Bookmark
-    #
-    print ('Delete bookmark ' +  DX_BOOKMARK + ' created previously on  branch ' + DX_BRANCH + ' on container  ' +  DX_CONTAINER + ' from template ' + DX_TEMPLATE + '...')
-    createbookmark = session.post(BASEURL+'/selfservice/bookmark/' + DX_BOOKMARK_REF + '/delete', headers=req_headers, allow_redirects=False)
+        if dbobj['template'] == DX_TEMPLATE_REF:
+            if dbobj['container'] == DX_CONTAINER_REF:
+                if dbobj['branch'] == DX_BRANCH_REF:
+                    if dbobj['name'] == DX_BOOKMARK:
+                        DX_BOOKMARK_REF = dbobj['reference']
+                        print ( DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
+    if DX_BOOKMARK_REF is None:
+        print ("Bookmark won't be removed because it is not present in this Delphix Engine")
+    else:
+        #
+        # Execute API call to delete Delphix Self Service Bookmark
+        #
+        deletebookmark = session.post(BASEURL+'/selfservice/bookmark/' + DX_BOOKMARK_REF + '/delete', headers=req_headers, allow_redirects=False)
+        print ('Deleted bookmark ' +  DX_BOOKMARK + ' created previously on  branch ' + DX_BRANCH + ' on container  ' +  DX_CONTAINER + ' from template ' + DX_TEMPLATE + '...')
 else:
     print ("Please specify CREATE or DELETE Bookmark only")
 
