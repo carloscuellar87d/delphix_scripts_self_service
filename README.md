@@ -1,1 +1,1 @@
-# delphix_scripts_qvc
+# delphix_scripts_self service
