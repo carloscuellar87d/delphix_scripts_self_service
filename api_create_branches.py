@@ -119,8 +119,8 @@ for dbobj in containerf['result']:
 # Create, Activate or Delete Branch accordingly ...
 #
 if DX_CREATE_ACT_DELETE == "CREATE":
-    print ( 'Checking if bookmark was created ... ' )
-    time.sleep(15)
+    print ( 'Checking if bookmark is present for new branch to be created ... ' )
+    time.sleep(10)
     #
     #Get Delphix Self Service Bookmark details
     #
@@ -134,17 +134,28 @@ if DX_CREATE_ACT_DELETE == "CREATE":
     #Get Delphix Self Service Bookmark reference
     #
     bm_created = 0
-    for dbobj in bookmarkf['result']:
-        if  dbobj['name'] in DX_BOOKMARK:
-            DX_BOOKMARK_REF = dbobj['reference']
-            ##print ( DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
-            print ( 'Bookmark exists ' + DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
-            bm_created = 1
+    c_time = 1
+    while bm_created == 0:
+        if c_time < 6:
+            for dbobj in bookmarkf['result']:
+                if  dbobj['name'] in DX_BOOKMARK:
+                    DX_BOOKMARK_REF = dbobj['reference']
+                    ##print ( DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
+                    print ( 'Bookmark exists ' + DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
+                    bm_created = 1
+            if bm_created != 1:
+                print ( 'Checking if bookmark is present for new branch to be created after 10 sec... ' )
+                time.sleep(1)
+                c_time += 1
+        else:
+            bm_created = 2
+
+
     #
     #Check and validate if bookmark was created successfully
     #
     if bm_created != 1:
-        sys.exit("Bookmark was not created successfully. Please review your parameters.")
+        sys.exit("Bookmark was not created successfully. Exiting this script.")
     #
     # Create JSON format parameters for API call to create Delphix Self Service Branch
     #
