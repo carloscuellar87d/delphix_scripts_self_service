@@ -144,7 +144,7 @@ if DX_CREATE_ACT_DELETE == "CREATE":
     #Check and validate if bookmark was created successfully
     #
     if bm_created != 1:
-        print ( 'Bookmark was not created successfully. Please review your parameters.' )
+        sys.exit("Bookmark was not created successfully. Please review your parameters.")
     #
     # Create JSON format parameters for API call to create Delphix Self Service Branch
     #
