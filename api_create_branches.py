@@ -38,6 +38,7 @@
 import sys
 import requests
 import json
+import time
 
 
 #DATE FORMAT IS "[yyyy]-[MM]-[dd]T[HH]:[mm]:[ss].[SSS]Z"
@@ -118,6 +119,8 @@ for dbobj in containerf['result']:
 # Create, Activate or Delete Branch accordingly ...
 #
 if DX_CREATE_ACT_DELETE == "CREATE":
+    print ( 'Checking if bookmark was created ... ' )
+    time.sleep(15)
     #
     #Get Delphix Self Service Bookmark details
     #
@@ -130,10 +133,18 @@ if DX_CREATE_ACT_DELETE == "CREATE":
     #
     #Get Delphix Self Service Bookmark reference
     #
+    bm_created = 0
     for dbobj in bookmarkf['result']:
-        if dbobj['name'] == DX_BOOKMARK:
+        if  dbobj['name'] in DX_BOOKMARK:
             DX_BOOKMARK_REF = dbobj['reference']
-            #print ( DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
+            ##print ( DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
+            print ( 'Bookmark exists ' + DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
+            bm_created = 1
+    #
+    #Check and validate if bookmark was created successfully
+    #
+    if bm_created != 1:
+        print ( 'Bookmark was not created successfully. Please review your parameters.' )
     #
     # Create JSON format parameters for API call to create Delphix Self Service Branch
     #
