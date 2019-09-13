@@ -145,7 +145,7 @@ if DX_CREATE_ACT_DELETE == "CREATE":
                     bm_created = 1
             if bm_created != 1:
                 print ( 'Checking if bookmark is present for new branch to be created after 10 sec... ' )
-                time.sleep(1)
+                time.sleep(10)
                 c_time += 1
         else:
             bm_created = 2
