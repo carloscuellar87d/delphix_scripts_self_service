@@ -120,7 +120,7 @@ for dbobj in containerf['result']:
 #
 if DX_CREATE_ACT_DELETE == "CREATE":
     print ( 'Checking if bookmark is present for new branch to be created ... ' )
-    time.sleep(10)
+    time.sleep(1)
     #
     #Get Delphix Self Service Bookmark details
     #
@@ -166,7 +166,94 @@ if DX_CREATE_ACT_DELETE == "CREATE":
     # Execute API call to create Delphix Self Service Branch
     #
     createbranch = session.post(BASEURL+'/selfservice/branch', data=formdata, headers=req_headers, allow_redirects=False)
-    #print (createbranch)
+    ##print (createbranch)
+    cbranchjs = json.loads(createbranch.text)
+    create_branch_job = cbranchjs['job']
+
+    #Get Delphix Self Service Bookmark details
+    #
+    job = session.get(BASEURL+'/job/'+ create_branch_job, headers=req_headers, allow_redirects=False)
+
+    #
+    # JSON Parsing ...
+    #
+    jobj = json.loads(job.text)
+    #
+
+    branch_created = 0
+    cb_time = 1
+    while branch_created == 0:
+        if cb_time < 10:
+            JOB_STATUS = jobj['result']['jobState']
+            if JOB_STATUS == "COMPLETED":
+                print ( 'Branch creation job completed ' +  create_branch_job)
+                branch_created = 1
+            else:
+                JOB_PERCENTAGE = str(jobj['result']['percentComplete'])
+                print ( 'Branch creation job progress at ' + JOB_PERCENTAGE + '%')
+                time.sleep(15)
+                cb_time += 1
+                job = session.get(BASEURL+'/job/'+ create_branch_job, headers=req_headers, allow_redirects=False)
+                jobj = json.loads(job.text)
+        else:
+            branch_created = 2
+            sys.exit("Branch was not created successfully. Exiting this script.")
+
+
+    print ( 'Confirming if branch is present for new branch to be created ... ' )
+    time.sleep(1)
+    #
+    #Get Delphix Self Service Bookmark details
+    #
+    branch = session.get(BASEURL+'/selfservice/branch', headers=req_headers, allow_redirects=False)
+
+    #
+    # JSON Parsing ...
+    #
+    branchf = json.loads(branch.text)
+    #
+    #Get Delphix Self Service Bookmark reference
+    #
+
+    for dbobj in branchf['result']:
+        if  dbobj['name'] in DX_BRANCH:
+            DX_BRC_REF = dbobj['reference']
+            print ( 'Branch exists ' + DX_BRANCH + ':' + DX_BRC_REF)
+
+
+
+    #
+    #Check and validate if bookmark was created successfully
+    #
+    if branch_created != 1:
+        sys.exit("Branch was not created successfully. Exiting this script.")
+
+
+    #
+    # Get Delphix Self Service Container details ...
+    #
+
+    container = session.get(BASEURL+'/selfservice/container', headers=req_headers, allow_redirects=False)
+    #
+    # JSON Parsing ...
+    #
+    containerf = json.loads(container.text)
+
+    #
+    # Get Delphix Self Service Container reference ...
+    #
+    for dbobj in containerf['result']:
+        if dbobj['name'] == DX_CONTAINER:
+            if dbobj['template'] == DX_TEMPLATE_REF:
+                DX_CONTAINER_REF = dbobj['reference']
+                DX_ACT_BRANCH_REF = dbobj['activeBranch']
+                print ( DX_CONTAINER + ':' + DX_CONTAINER_REF)
+                if DX_ACT_BRANCH_REF == DX_BRC_REF:
+                    print ( 'Active Branch: ' + DX_ACT_BRANCH_REF)
+                else:
+                    sys.exit("Branch was not created successfully. Exiting this script.")
+
+
 elif DX_CREATE_ACT_DELETE == "DELETE":
     #
     #Get Delphix Self Service Branch and Active Branch details
