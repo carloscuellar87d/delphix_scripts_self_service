@@ -120,7 +120,7 @@ for dbobj in containerf['result']:
 #
 if DX_CREATE_ACT_DELETE == "CREATE":
     print ( 'Checking if bookmark is present for new branch to be created ... ' )
-    time.sleep(1)
+    time.sleep(10)
     #
     #Get Delphix Self Service Bookmark details
     #
