@@ -174,36 +174,41 @@ if DX_CREATE_DELETE == "CREATE":
             # Execute API call to create Delphix Self Service Bookmark
             #
         createbookmark = session.post(BASEURL+'/selfservice/bookmark', data=formdata, headers=req_headers, allow_redirects=False)
-        ##print ( 'Checking if bookmark was created ... ' )
-        ##time.sleep(15)
+        print ( 'Checking if bookmark was created ... ' )
         #
         #Get Delphix Self Service Bookmark details
         #
-        ##bookmark = session.get(BASEURL+'/selfservice/bookmark', headers=req_headers, allow_redirects=False)
-        ##print ('')
-        ##print (bookmark)
+        bookmark = session.get(BASEURL+'/selfservice/bookmark', headers=req_headers, allow_redirects=False)
         #
         # JSON Parsing ...
         #
-        ##bookmarkf = json.loads(bookmark.text)
-
+        bookmarkf = json.loads(bookmark.text)
         #
         #Get Delphix Self Service Bookmark reference
         #
-        ##bm_created = 0
-        ##for dbobj in bookmarkf['result']:
-            ##if dbobj['template'] == DX_TEMPLATE_REF:
-                ##if dbobj['container'] == DX_CONTAINER_REF:
-                    ##if dbobj['branch'] == DX_BRANCH_REF:
-                        ##if dbobj['name'] in DX_BOOKMARK:
-                            ##DX_BOOKMARK_REF = dbobj['reference']
-                            ##print ( 'Bookmark created successfully --> ' + DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
-                            ##bm_created = 1
+        bm_created = 0
+        c_time = 1
+        while bm_created == 0:
+            if c_time < 6:
+                for dbobj in bookmarkf['result']:
+                    if  dbobj['name'] in DX_BOOKMARK:
+                        DX_BOOKMARK_REF = dbobj['reference']
+                        ##print ( DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
+                        print ( 'Bookmark created successfully --> ' + DX_BOOKMARK + ':' + DX_BOOKMARK_REF)
+                        bm_created = 1
+                if bm_created != 1:
+                        print ( 'Checking... ' )
+                        time.sleep(10)
+                        c_time += 1
+            else:
+                bm_created = 2
+
+
         #
         #Check and validate if bookmark was created successfully
         #
-        ##if bm_created != 1:
-            ##print ( 'Bookmark was not created successfully. Please review your parameters.' )
+        if bm_created != 1:
+            sys.exit("Bookmark was not created successfully. Exiting this script.")
 
     else:
         print ('Please specify the current active branch of container ' + DX_CONTAINER + ' from template ' + DX_TEMPLATE + '...')
